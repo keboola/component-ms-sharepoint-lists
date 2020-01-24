@@ -48,8 +48,8 @@ class Component(KBCEnvHandler):
         try:
             self.validate_config(MANDATORY_PARS)
 
-        except ValueError as e:
-            logging.exception(e)
+        except ValueError as ex:
+            logging.exception(ex)
             exit(1)
 
         authorization_data = json.loads(self.get_authorization().get('#data'))
