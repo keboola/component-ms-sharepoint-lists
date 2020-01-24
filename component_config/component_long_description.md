@@ -1,0 +1,2 @@
+Create and upload `Lists` and `List Items` to MS SharePoint. If you're looking for uploading documents and files to the 
+Sharepoint platform, use the [One Drive writer](https://components.keboola.com/components/jakub-bartel.wr-onedrive).
