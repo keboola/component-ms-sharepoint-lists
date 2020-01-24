@@ -11,7 +11,7 @@ import sys
 from kbc.env_handler import KBCEnvHandler
 
 from ms_graph.client import Client
-from ms_graph.dataobjects import *
+from ms_graph.dataobjects import get_col_def_name, get_col_definition, TextColumn, SharepointList, ColumnDefinition
 from ms_graph.exceptions import BaseError
 
 # global constants'
@@ -120,7 +120,6 @@ class Component(KBCEnvHandler):
 
             logging.info('Export finished!')
 
-
         except BaseError as ex:
             logging.exception(ex)
             exit(1)
@@ -146,7 +145,7 @@ class Component(KBCEnvHandler):
             src_cols = reader.fieldnames
 
         dst_cols = [c['name'] for c in list_columns]
-        required_dst_cols = [c['name'] for c in list_columns if c['required'] == True]
+        required_dst_cols = [c['name'] for c in list_columns if c['required']]
         nonexisting_cols = [src_col for src_col in src_cols if src_col not in dst_cols]
         missing_required = [req_col for req_col in required_dst_cols if req_col not in src_cols]
 

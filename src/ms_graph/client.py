@@ -6,7 +6,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from ms_graph import exceptions
-from ms_graph.dataobjects import *
+from ms_graph.dataobjects import SharepointList
 
 
 class Client(HttpClientBase):
