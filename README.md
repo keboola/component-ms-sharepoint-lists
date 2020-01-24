@@ -76,22 +76,6 @@ If specified list already exist, this section is ignored.
 - `dateTime`, `date` - ISO 8601 format is expected, however the default `YYYY-MM-DD` format should work as well. 
 The value is then displayed in SharePoint with default formatting. 
 
-### Include additional system columns
-
-SharePoint lists also contain system columns that are not visible in the default UI view. By selecting this option it is possible to retrieve these 
-columns also. **NOTE** By default, the extractor uses the `Display Name` of columns. It may happen that some of the system or custom columns, 
-share the same display name. In such case, the extractor automatically deduplicates the column names by appending the underlying unique `API name` 
-of the column separated by the `_` underscore sign. Leading to column names such as `Title_LinkTitleNoMenu`, `Title_LinkTitle`.
-
-### Use column display names
-
-List columns in SharePoint consists of a `display name` that is by default displayed in the SharePoint UI view 
-and an `api name` that is underlying unique identifier of a column and does not change. This option 
-allows you to choose which of the names you wish to use in the result table. 
-
-**NOTE** that when using the `display name` duplicate column names will be automatically deduplicated. 
-Also some of the system columns are prefixed with `_`, these underscores will be dropped since the *Storage* columns cannot
- start with underscore signs.
 
 # Development
  
