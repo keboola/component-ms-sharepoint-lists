@@ -42,7 +42,7 @@ Your MS SharePoint host, typically something like `{my-tenant}.sharepoint.com`
 
 ## List name
 
-Name of the SharePoint list you want to update, exactly as it is displayed in the UI (case sensitive). 
+Name of the SharePoint list you want to create or update, exactly as it is displayed in the UI (case sensitive). 
 
 ![List example](docs/imgs/list.png)
 
