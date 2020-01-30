@@ -246,7 +246,7 @@ class Client(HttpClientBase):
             logging.warning(f'Some requests failed ({len(failed)}), retrying. ')
         for fid, f in enumerate(failed.copy()):
             if f['status'] >= 500:
-                self.delete_list_item(site_id, list_id, f['id'])
+                self.delete_list_item(site_id, list_id, item_ids[f['id']])
                 failed.pop(fid)
         return failed
 
