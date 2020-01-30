@@ -156,7 +156,7 @@ class Component(KBCEnvHandler):
                 if batch_index >= BATCH_LIMIT:
                     batch_index = 0
                     f = self.client.make_batch_request(batch, 'Create items')
-                    f = self._retry_failed_write(batch, f)
+                    f = self._retry_failed_write(site_id, list_id, batch, f)
                     failed.extend(f)
                     batch.clear()
             # last batch
