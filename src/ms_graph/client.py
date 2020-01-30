@@ -43,7 +43,7 @@ class Client(HttpClientBase):
 
     def __init__(self, refresh_token, client_secret, client_id, scope):
         HttpClientBase.__init__(self, base_url=self.BASE_URL, max_retries=self.MAX_RETRIES, backoff_factor=0.3,
-                                status_forcelist=(429, 503, 500, 502, 504, 507))
+                                status_forcelist=(429, 503, 500, 502, 504, 507, 404))
         # refresh always on init
         self.__refresh_token = refresh_token
         self.__clien_secret = client_secret
