@@ -229,7 +229,7 @@ class Client(HttpClientBase):
         batch_index = 0
         for ri, item_id in enumerate(item_ids):
             endpoint = f'/sites/{site_id}/lists/{list_id}/items/{item_id}'
-            batch.append(asdict(BatchRequest(str(ri), endpoint, 'DELETE')))
+            batch.append(asdict(BatchRequest(str(batch_index), endpoint, 'DELETE')))
             batch_index += 1
             if batch_index >= batch_limit:
                 batch_index = 0
@@ -246,7 +246,7 @@ class Client(HttpClientBase):
             logging.warning(f'Some requests failed ({len(failed)}), retrying. ')
         for fid, f in enumerate(failed.copy()):
             if f['status'] >= 500:
-                self.delete_list_item(site_id, list_id, item_ids[f['id']])
+                self.delete_list_item(site_id, list_id, item_ids[int(f['id'])])
                 failed.pop(fid)
         return failed
 

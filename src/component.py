@@ -171,7 +171,7 @@ class Component(KBCEnvHandler):
         if failed:
             logging.warning(f'Some requests failed ({len(failed)}), retrying. ')
         for fid, f in enumerate(failed.copy()):
-            self.client.create_list_item(site_id, list_id, batch[f['id']]['body']['fields'])
+            self.client.create_list_item(site_id, list_id, batch[int(f['id'])]['body']['fields'])
             failed.pop(fid)
 
     def validate_table_cols(self, list_columns, in_table, title_col_mapping=None):
