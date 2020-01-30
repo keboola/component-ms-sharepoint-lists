@@ -239,6 +239,12 @@ class Client(HttpClientBase):
         if batch:
             f = self.make_batch_request(batch, 'Delete items')
             failed.extend(f)
+
+        # retry failed one by one. Retry strategy applied
+        for f in failed.copy():
+            if f['status'] >= 500:
+                self.delete_list_item(site_id, list_id, f['id'])
+                failed.pop(f['id'])
         return failed
 
     def create_list_item(self, site_id, list_id, fields):
