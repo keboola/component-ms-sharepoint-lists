@@ -243,12 +243,15 @@ class Client(HttpClientBase):
 
         # retry failed one by one. Retry strategy applied
         if failed:
-            logging.warning(f'Some requests failed ({len(failed)}), retrying. ')
-        for fid, f in enumerate(failed.copy()):
+            logging.warning(f'Some requests failed ({failed}), retrying. ')
+
+        failed_idx = []
+        for fid, f in enumerate(failed):
             if f['status'] >= 500:
                 self.delete_list_item(site_id, list_id, item_ids[int(f['id'])])
-                failed.pop(fid)
-        return failed
+                failed_idx.append(fid)
+
+        return [f for i, f in enumerate(failed) if i not in failed_idx]
 
     def create_list_item(self, site_id, list_id, fields):
         """

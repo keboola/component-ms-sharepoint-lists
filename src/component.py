@@ -156,7 +156,7 @@ class Component(KBCEnvHandler):
                 if batch_index >= BATCH_LIMIT:
                     batch_index = 0
                     f = self.client.make_batch_request(batch, 'Create items')
-                    self._retry_failed_write(batch, f)
+                    f = self._retry_failed_write(batch, f)
                     failed.extend(f)
                     batch.clear()
             # last batch
@@ -170,9 +170,11 @@ class Component(KBCEnvHandler):
     def _retry_failed_write(self, site_id, list_id, batch, failed):
         if failed:
             logging.warning(f'Some requests failed ({len(failed)}), retrying. ')
-        for fid, f in enumerate(failed.copy()):
+        failed_idx = []
+        for fid, f in enumerate(failed):
             self.client.create_list_item(site_id, list_id, batch[int(f['id'])]['body']['fields'])
-            failed.pop(fid)
+            failed_idx.append(fid)
+        return [f for i, f in enumerate(failed) if i not in failed_idx]
 
     def validate_table_cols(self, list_columns, in_table, title_col_mapping=None):
         src_cols = list()
