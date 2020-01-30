@@ -150,12 +150,13 @@ class Component(KBCEnvHandler):
                         nonexistent_cols.remove(title_col[KEY_SRC_NAME])
 
                 self._cleanup_record_fields(line, nonexistent_cols)
-                br = self.client.build_create_list_item_batch_request(ri, site_id, list_id, line)
+                br = self.client.build_create_list_item_batch_request(batch_index, site_id, list_id, line)
                 batch.append(br)
                 batch_index += 1
                 if batch_index >= BATCH_LIMIT:
                     batch_index = 0
                     f = self.client.make_batch_request(batch, 'Create items')
+                    self._retry_failed_write(batch, f)
                     failed.extend(f)
                     batch.clear()
             # last batch
@@ -165,6 +166,11 @@ class Component(KBCEnvHandler):
 
         if failed:
             raise RuntimeError(f'Write finished with error. Some records failed: {failed}')
+
+    def _retry_failed_write(self, site_id, list_id, batch, failed, ):
+        for fid, f in enumerate(failed.copy()):
+            self.client.create_list_item(site_id, list_id, batch[f['id']]['body']['fields'])
+            failed.pop(fid)
 
     def validate_table_cols(self, list_columns, in_table, title_col_mapping=None):
         src_cols = list()

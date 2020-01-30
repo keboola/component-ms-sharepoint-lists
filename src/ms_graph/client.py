@@ -241,10 +241,10 @@ class Client(HttpClientBase):
             failed.extend(f)
 
         # retry failed one by one. Retry strategy applied
-        for f in failed.copy():
+        for fid, f in enumerate(failed.copy()):
             if f['status'] >= 500:
                 self.delete_list_item(site_id, list_id, f['id'])
-                failed.pop(f['id'])
+                failed.pop(fid)
         return failed
 
     def create_list_item(self, site_id, list_id, fields):
