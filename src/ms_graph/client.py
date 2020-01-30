@@ -229,7 +229,7 @@ class Client(HttpClientBase):
         batch_index = 0
         for ri, item_id in enumerate(item_ids):
             endpoint = f'/sites/{site_id}/lists/{list_id}/items/{item_id}'
-            batch.append(asdict(BatchRequest(str(batch_index), endpoint, 'DELETE')))
+            batch.append(asdict(BatchRequest(str(ri), endpoint, 'DELETE')))
             batch_index += 1
             if batch_index >= batch_limit:
                 batch_index = 0
