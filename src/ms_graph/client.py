@@ -178,6 +178,8 @@ class Client(HttpClientBase):
         :return: list object
         """
         lists = self.get_site_lists(site_id)
+        # ms removes -
+        list_name = list_name.replace('-', '')
         res_list = [l for l in lists if l['name'] == list_name]
 
         return res_list[0] if res_list else None
