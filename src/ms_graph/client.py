@@ -1,3 +1,4 @@
+import logging
 from dataclasses import asdict
 from dataclasses import dataclass
 from typing import List
@@ -241,6 +242,8 @@ class Client(HttpClientBase):
             failed.extend(f)
 
         # retry failed one by one. Retry strategy applied
+        if failed:
+            logging.warning(f'Some requests failed ({len(failed)}), retrying. ')
         for fid, f in enumerate(failed.copy()):
             if f['status'] >= 500:
                 self.delete_list_item(site_id, list_id, f['id'])
