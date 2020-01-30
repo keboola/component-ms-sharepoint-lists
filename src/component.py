@@ -89,9 +89,12 @@ class Component(KBCEnvHandler):
             if params.get('list_description'):
                 list_dsc = params['list_description'][0]
 
+            title_col_mapping = None
             if params.get(KEY_CREATE_NEW, {}) and not sh_list:
                 # create new list
-                sh_list = self._create_new_list(site['id'], params[KEY_LIST_NAME], list_dsc, params[KEY_CREATE_NEW][0],
+                table_pars = params[KEY_CREATE_NEW][0]
+                title_col_mapping = table_pars[KEY_TITLE_COL]
+                sh_list = self._create_new_list(site['id'], params[KEY_LIST_NAME], list_dsc, table_pars,
                                                 in_table)
             else:
                 if not sh_list:
@@ -106,7 +109,7 @@ class Component(KBCEnvHandler):
             list_columns = self.client.get_site_list_columns(site['id'], sh_list['id'],
                                                              expand_par='columns')
 
-            non_existent_cols = self.validate_table_cols(list_columns, in_table)
+            non_existent_cols = self.validate_table_cols(list_columns, in_table, title_col_mapping)
             if non_existent_cols:
                 logging.warning(
                     f'Some columns: {non_existent_cols} were not found in the destination list. They will be ignored!')
@@ -116,7 +119,8 @@ class Component(KBCEnvHandler):
             self._empty_list(site['id'], sh_list)
 
             logging.info('Writing table items.')
-            self.write_table(site['id'], sh_list['id'], in_table, non_existent_cols)
+            self.write_table(site['id'], sh_list['id'], in_table, non_existent_cols,
+                             title_col_mapping)
 
             logging.info('Export finished!')
 
@@ -128,16 +132,22 @@ class Component(KBCEnvHandler):
         for fl in self.client.get_site_list_fields(site_id, sh_lst['id'], expand='fields'):
             self.client.delete_list_items(site_id, sh_lst['id'], [f['id'] for f in fl])
 
-    def write_table(self, site_id, list_id, in_table, nonexistent_cols):
+    def write_table(self, site_id, list_id, in_table, nonexistent_cols, title_col):
         with open(in_table['full_path'], mode='r',
                   encoding='utf-8') as in_file:
             reader = csv.DictReader(in_file, lineterminator='\n')
 
             for line in reader:
+                if title_col:
+                    # creating new list, have col mapping
+                    line['Title'] = line.pop(title_col[KEY_SRC_NAME])
+                    if title_col[KEY_SRC_NAME] in nonexistent_cols:
+                        nonexistent_cols.remove(title_col[KEY_SRC_NAME])
+
                 self._cleanup_record_fields(line, nonexistent_cols)
                 self.client.create_list_item(site_id, list_id, line)
 
-    def validate_table_cols(self, list_columns, in_table):
+    def validate_table_cols(self, list_columns, in_table, title_col_mapping=None):
         src_cols = list()
         with open(in_table['full_path'], mode='r',
                   encoding='utf-8') as in_file:
@@ -147,6 +157,11 @@ class Component(KBCEnvHandler):
         dst_cols = [c['name'] for c in list_columns]
         required_dst_cols = [c['name'] for c in list_columns if c['required']]
         nonexisting_cols = [src_col for src_col in src_cols if src_col not in dst_cols]
+        if title_col_mapping:
+            # just in case the col does not exist
+            src_name = title_col_mapping[KEY_SRC_NAME]
+            required_dst_cols.append(src_name)
+            src_cols.append('Title')
         missing_required = [req_col for req_col in required_dst_cols if req_col not in src_cols]
 
         if missing_required:
@@ -159,16 +174,17 @@ class Component(KBCEnvHandler):
             line.pop(c)
 
     def _create_new_list(self, site_id, list_name, list_desc, table_pars, in_table):
-        title_col_name = table_pars[KEY_TITLE_COL][KEY_SRC_NAME]
-        column_pars = table_pars[KEY_COLUMN_SETUP].copy()
-        all_col_names = [c[KEY_SRC_NAME] for c in column_pars]
-        # add title col
-        table_pars[KEY_TITLE_COL]['required'] = True
-        column_pars.append(table_pars[KEY_TITLE_COL])
-        all_col_names.append(title_col_name)
-        default_cols = self.validate_table_cols(column_pars, in_table)
+        title_col = table_pars[KEY_TITLE_COL]
+        column_pars = table_pars[KEY_COLUMN_SETUP]
+
+        default_cols = self.validate_table_cols(column_pars, in_table, title_col)
+        # validate title col
+        if title_col[KEY_SRC_NAME] not in default_cols:
+            raise ValueError(f'Specified title column "{title_col[KEY_SRC_NAME]}" is missing in the source table.')
+        default_cols.remove(title_col[KEY_SRC_NAME])
 
         lst_def = self._build_table_def(list_name, list_desc, table_pars, default_cols)
+
         # create list
         res = self.client.create_list(site_id, lst_def)
         logging.debug(f'List created: {res}')
