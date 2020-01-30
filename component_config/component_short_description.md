@@ -1,3 +1,1 @@
-Create and upload `Lists` and `List Items` to MS SharePoint. SharePoint empowers teamwork with dynamic and productive team sites for 
-every project team, department, and division. Share files, data, news, and resources. Customize your site to streamline your team’s work. 
-Collaborate effortlessly and securely with team members inside and outside your organization, across PCs, Macs, and mobile devices.
+SharePoint empowers teamwork with dynamic and productive team sites. A list in SharePoint is a collection of data that gives you and your co-workers a flexible way to organize information.
