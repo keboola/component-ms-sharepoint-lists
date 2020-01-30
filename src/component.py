@@ -132,7 +132,7 @@ class Component(KBCEnvHandler):
         for fl in self.client.get_site_list_fields(site_id, sh_lst['id'], expand='fields'):
             f = self.client.delete_list_items(site_id, sh_lst['id'], [f['id'] for f in fl])
             if f:
-                raise RuntimeError(f"Some records couldn't be deleted: {f}")
+                raise RuntimeError(f"Some records couldn't be deleted: {f}.")
 
     def write_table(self, site_id, list_id, in_table, nonexistent_cols, title_col):
         with open(in_table['full_path'], mode='r',

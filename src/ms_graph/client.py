@@ -246,11 +246,13 @@ class Client(HttpClientBase):
             logging.warning(f'Some requests failed ({failed}), retrying. ')
 
         failed_idx = []
-        for fid, f in enumerate(failed):
-            if f['status'] >= 500:
-                self.delete_list_item(site_id, list_id, item_ids[int(f['id'])])
-                failed_idx.append(fid)
-
+        try:
+            for fid, f in enumerate(failed):
+                if f['status'] >= 500:
+                    self.delete_list_item(site_id, list_id, item_ids[int(f['id'])])
+                    failed_idx.append(fid)
+        except Exception as e:
+            print(e)
         return [f for i, f in enumerate(failed) if i not in failed_idx]
 
     def create_list_item(self, site_id, list_id, fields):
