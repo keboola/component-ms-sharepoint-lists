@@ -30,8 +30,6 @@ KEY_DEBUG = 'debug'
 MANDATORY_PARS = [KEY_BASE_HOST, KEY_LIST_NAME, KEY_SITE_REL_PATH]
 MANDATORY_IMAGE_PARS = []
 
-APP_VERSION = '0.0.1'
-
 
 class Component(KBCEnvHandler):
 
@@ -42,7 +40,6 @@ class Component(KBCEnvHandler):
             debug = True
         if debug:
             logging.getLogger().setLevel(logging.DEBUG)
-        logging.info('Running version %s', APP_VERSION)
         logging.info('Loading configuration...')
 
         try:
