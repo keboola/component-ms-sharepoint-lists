@@ -43,7 +43,7 @@ class Client(HttpClientBase):
 
     def __init__(self, refresh_token, client_secret, client_id, scope):
         HttpClientBase.__init__(self, base_url=self.BASE_URL, max_retries=self.MAX_RETRIES, backoff_factor=0.3,
-                                status_forcelist=(429, 503, 500, 502, 504, 507, 404))
+                                status_forcelist=(429, 503, 500, 502, 504, 507))
         # refresh always on init
         self.__refresh_token = refresh_token
         self.__clien_secret = client_secret
@@ -248,7 +248,11 @@ class Client(HttpClientBase):
         failed_idx = []
 
         for fid, f in enumerate(failed):
-            self.delete_list_item(site_id, list_id, item_ids[int(f['id'])])
+            try:
+                self.delete_list_item(site_id, list_id, item_ids[int(f['id'])])
+            except exceptions.NotFound:
+                logging.warning(f'Item {item_ids[int(f["id"])]} already deleted.')
+
             failed_idx.append(fid)
 
         return [f for i, f in enumerate(failed) if i not in failed_idx]
