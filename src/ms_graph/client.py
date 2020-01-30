@@ -1,4 +1,6 @@
 from dataclasses import asdict
+from dataclasses import dataclass
+from typing import List
 
 import requests
 from kbc.client_base import HttpClientBase
@@ -7,6 +9,15 @@ from urllib3.util.retry import Retry
 
 from ms_graph import exceptions
 from ms_graph.dataobjects import SharepointList
+
+
+@dataclass
+class BatchRequest:
+    id: str
+    url: str
+    method: str
+    body: dict = None
+    headers: dict = None
 
 
 class Client(HttpClientBase):
@@ -31,7 +42,7 @@ class Client(HttpClientBase):
 
     def __init__(self, refresh_token, client_secret, client_id, scope):
         HttpClientBase.__init__(self, base_url=self.BASE_URL, max_retries=self.MAX_RETRIES, backoff_factor=0.3,
-                                status_forcelist=(429, 503, 500, 502, 504))
+                                status_forcelist=(429, 503, 500, 502, 504, 507))
         # refresh always on init
         self.__refresh_token = refresh_token
         self.__clien_secret = client_secret
@@ -74,7 +85,7 @@ class Client(HttpClientBase):
             connect=self.max_retries,
             backoff_factor=self.backoff_factor,
             status_forcelist=self.status_forcelist,
-            method_whitelist=('GET', 'POST', 'PATCH', 'UPDATE')
+            method_whitelist=('GET', 'POST', 'PATCH', 'UPDATE', 'DELETE')
         )
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
@@ -130,6 +141,16 @@ class Client(HttpClientBase):
 
         r = self.requests_retry_session(session=s).request('DELETE', *args, **kwargs)
         return r
+
+    def make_batch_request(self, batch_requests: List[dict], r_type=''):
+        endpoint = '/$batch'
+        rq_url = self.base_url + endpoint
+
+        data = {"requests": batch_requests}
+
+        resp = self.post_raw(rq_url, json=data)
+        r = self._parse_response(resp, f'batch: {r_type}')
+        return self._get_failed_batch_resp(r)
 
     def get_site_by_relative_url(self, hostname, site_path):
         """
@@ -198,9 +219,25 @@ class Client(HttpClientBase):
         r = self._delete_raw(url=url)
         self._parse_response(r, endpoint)
 
-    def delete_list_items(self, site_id, list_id, item_ids):
-        for i in item_ids:
-            self.delete_list_item(site_id, list_id, i)
+    def delete_list_items(self, site_id, list_id, item_ids, batch_limit=20):
+
+        batch = []
+        failed = []
+        batch_index = 0
+        for ri, item_id in enumerate(item_ids):
+            endpoint = f'/sites/{site_id}/lists/{list_id}/items/{item_id}'
+            batch.append(asdict(BatchRequest(str(ri), endpoint, 'DELETE')))
+            batch_index += 1
+            if batch_index >= batch_limit:
+                batch_index = 0
+                f = self.make_batch_request(batch, 'Delete items')
+                failed.extend(f)
+                batch.clear()
+            # last batch
+        if batch:
+            f = self.make_batch_request(batch, 'Delete items')
+            failed.extend(f)
+        return failed
 
     def create_list_item(self, site_id, list_id, fields):
         """
@@ -216,6 +253,21 @@ class Client(HttpClientBase):
         url = self.base_url + endpoint
         rs = self.post_raw(url=url, json=data)
         return self._parse_response(rs, 'create list item')
+
+    def build_create_list_item_batch_request(self, rq_id, site_id, list_id, fields):
+        """
+
+        :param site_id:
+        :param list_id:
+        :param fields: Dictionary with fields. {key: value}
+        :return:
+        """
+        endpoint = f'/sites/{site_id}/lists/{list_id}/items'
+
+        data = {'fields': fields}
+        headers = {'Content-Type': 'application/json'}
+
+        return asdict(BatchRequest(rq_id, endpoint, 'POST', data, headers))
 
     def _parse_response(self, response, endpoint):
         status_code = response.status_code
@@ -271,6 +323,13 @@ class Client(HttpClientBase):
             raise exceptions.BandwidthLimitExceeded(f'Calling endpoint {endpoint} failed', r)
         else:
             raise exceptions.UnknownError(f'Calling endpoint {endpoint} failed', r)
+
+    def _get_failed_batch_resp(self, response):
+        failed = []
+        for r in response['responses']:
+            if r['status'] >= 300:
+                failed.append(r)
+        return failed
 
     def _dedupe_header(self, columns):
         col_keys = dict()
