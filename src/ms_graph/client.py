@@ -243,7 +243,7 @@ class Client(HttpClientBase):
 
         # retry failed one by one. Retry strategy applied
         if failed:
-            logging.warning(f'Some requests failed ({failed}), retrying. ')
+            logging.info(f'Some requests failed ({failed}), retrying. ')
 
         failed_idx = []
 

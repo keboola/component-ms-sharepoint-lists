@@ -169,7 +169,7 @@ class Component(KBCEnvHandler):
 
     def _retry_failed_write(self, site_id, list_id, batch, failed):
         if failed:
-            logging.warning(f'Some requests failed ({len(failed)}), retrying. ')
+            logging.info(f'Some ({len(failed)}) requests failed, retrying.')
         failed_idx = []
         for fid, f in enumerate(failed):
             self.client.create_list_item(site_id, list_id, batch[int(f['id'])]['body']['fields'])
