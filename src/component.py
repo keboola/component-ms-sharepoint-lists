@@ -15,6 +15,7 @@ from ms_graph.dataobjects import get_col_def_name, get_col_definition, TextColum
 from ms_graph.exceptions import BaseError
 
 # global constants'
+BATCH_LIMIT = 20
 KEY_COLUMN_SETUP = 'column_setup'
 OAUTH_APP_SCOPE = 'offline_access Files.Read Sites.ReadWrite.All'
 # configuration variables
@@ -86,10 +87,12 @@ class Component(KBCEnvHandler):
             if params.get('list_description'):
                 list_dsc = params['list_description'][0]
 
-            title_col_mapping = None
-            if params.get(KEY_CREATE_NEW, {}) and not sh_list:
+            table_pars = params.get(KEY_CREATE_NEW, {})
+            title_col_mapping = table_pars[0][KEY_TITLE_COL] if table_pars else None
+
+            if table_pars and not sh_list:
                 # create new list
-                table_pars = params[KEY_CREATE_NEW][0]
+                table_pars = table_pars[0]
                 title_col_mapping = table_pars[KEY_TITLE_COL]
                 sh_list = self._create_new_list(site['id'], params[KEY_LIST_NAME], list_dsc, table_pars,
                                                 in_table)
@@ -127,14 +130,19 @@ class Component(KBCEnvHandler):
 
     def _empty_list(self, site_id, sh_lst):
         for fl in self.client.get_site_list_fields(site_id, sh_lst['id'], expand='fields'):
-            self.client.delete_list_items(site_id, sh_lst['id'], [f['id'] for f in fl])
+            f = self.client.delete_list_items(site_id, sh_lst['id'], [f['id'] for f in fl])
+            if f:
+                raise RuntimeError(f"Some records couldn't be deleted: {f}.")
 
     def write_table(self, site_id, list_id, in_table, nonexistent_cols, title_col):
         with open(in_table['full_path'], mode='r',
                   encoding='utf-8') as in_file:
             reader = csv.DictReader(in_file, lineterminator='\n')
 
-            for line in reader:
+            batch = []
+            failed = []
+            batch_index = 0
+            for ri, line in enumerate(reader):
                 if title_col:
                     # creating new list, have col mapping
                     line['Title'] = line.pop(title_col[KEY_SRC_NAME])
@@ -142,7 +150,31 @@ class Component(KBCEnvHandler):
                         nonexistent_cols.remove(title_col[KEY_SRC_NAME])
 
                 self._cleanup_record_fields(line, nonexistent_cols)
-                self.client.create_list_item(site_id, list_id, line)
+                br = self.client.build_create_list_item_batch_request(batch_index, site_id, list_id, line)
+                batch.append(br)
+                batch_index += 1
+                if batch_index >= BATCH_LIMIT:
+                    batch_index = 0
+                    f = self.client.make_batch_request(batch, 'Create items')
+                    f = self._retry_failed_write(site_id, list_id, batch, f)
+                    failed.extend(f)
+                    batch.clear()
+            # last batch
+            if batch:
+                f = self.client.make_batch_request(batch, 'Create items')
+                failed.extend(f)
+
+        if failed:
+            raise RuntimeError(f'Write finished with error. Some records failed: {failed}')
+
+    def _retry_failed_write(self, site_id, list_id, batch, failed):
+        if failed:
+            logging.info(f'Some ({len(failed)}) requests failed, retrying.')
+        failed_idx = []
+        for fid, f in enumerate(failed):
+            self.client.create_list_item(site_id, list_id, batch[int(f['id'])]['body']['fields'])
+            failed_idx.append(fid)
+        return [f for i, f in enumerate(failed) if i not in failed_idx]
 
     def validate_table_cols(self, list_columns, in_table, title_col_mapping=None):
         src_cols = list()
