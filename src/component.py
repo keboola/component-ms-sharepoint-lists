@@ -15,6 +15,7 @@ from ms_graph.dataobjects import get_col_def_name, get_col_definition, TextColum
 from ms_graph.exceptions import BaseError
 
 # global constants'
+KEY_LIST_DESC = 'list_description'
 BATCH_LIMIT = 20
 KEY_COLUMN_SETUP = 'column_setup'
 OAUTH_APP_SCOPE = 'offline_access Files.Read Sites.ReadWrite.All'
@@ -83,16 +84,13 @@ class Component(KBCEnvHandler):
             # get existing list
             sh_list = self.client.get_site_list_by_name(site['id'], params[KEY_LIST_NAME])
 
-            list_dsc = ''
-            if params.get('list_description'):
-                list_dsc = params['list_description'][0]
-
             table_pars = params.get(KEY_CREATE_NEW, {})
             title_col_mapping = table_pars[0][KEY_TITLE_COL] if table_pars else None
 
             if table_pars and not sh_list:
                 # create new list
                 table_pars = table_pars[0]
+                list_dsc = table_pars.get(KEY_LIST_DESC, '')
                 title_col_mapping = table_pars[KEY_TITLE_COL]
                 sh_list = self._create_new_list(site['id'], params[KEY_LIST_NAME], list_dsc, table_pars,
                                                 in_table)
