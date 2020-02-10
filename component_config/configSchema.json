@@ -28,17 +28,6 @@
       "description": "Name of the new or existing Sharepoint List. To overwrite existing list the name must be specified exactly as displayed in the UI.",
       "propertyOrder": 2000
     },
-    "list_description": {
-      "type": "array",
-      "title": "List description",
-      "description": "Add / Update list description",
-      "maxItems": 1,
-      "items": {
-        "type": "string",
-        "title": "Description"
-      },
-      "propertyOrder": 3000
-    },
     "create_new": {
       "type": "array",
       "title": "Create new list",
@@ -49,27 +38,35 @@
         "type": "object",
         "title": "New list parameters",
         "required": [
+          "list_description",
           "title_column",
           "column_setup"
         ],
         "properties": {
+          "list_description": {
+            "type": "string",
+            "title": "List description",
+            "description": "Result list description",
+            "maxItems": 1,
+            "propertyOrder": 1
+          },
           "title_column": {
-              "type": "object",
-              "title": "Title column",
-              "description": "List will be generated with the genericTemplate that requires one Title column. Specify, which column you want to use as Title. It may be for example you index column.",
-              "format": "grid",
-              "required": [
-                "name"
-              ],
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "title": "Source column name",
-                  "description": "Source table column name",
-                  "propertyOrder": 10
-                }
+            "type": "object",
+            "title": "Title column",
+            "description": "List will be generated with the genericTemplate that requires one Title column. Specify, which column you want to use as Title. It may be for example you index column.",
+            "format": "grid",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Source column name",
+                "description": "Source table column name",
+                "propertyOrder": 10
               }
-            },
+            }
+          },
           "column_setup": {
             "type": "array",
             "title": "List column parameters",
