@@ -5,7 +5,6 @@
     "base_host_name",
     "site_url_rel_path",
     "list_name",
-    "list_description",
     "create_new"
   ],
   "properties": {
