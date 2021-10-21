@@ -1,4 +1,5 @@
 import logging
+import urllib
 from dataclasses import asdict
 from dataclasses import dataclass
 from typing import List
@@ -50,7 +51,6 @@ class Client(HttpClientBase):
         self.__client_id = client_id
         self.__scope = scope
         access_token = self.refresh_token()
-
         # set auth header
         self._auth_header = {"Authorization": 'Bearer ' + access_token,
                              "Content-Type": "application/json"}
@@ -145,7 +145,7 @@ class Client(HttpClientBase):
 
     def make_batch_request(self, batch_requests: List[dict], r_type=''):
         endpoint = '/$batch'
-        rq_url = self.base_url + endpoint
+        rq_url = urllib.parse.urljoin(self.base_url, endpoint)
 
         data = {"requests": batch_requests}
 
@@ -160,7 +160,7 @@ class Client(HttpClientBase):
         :param site_path: e.g. /site/MyTeamSite
         :return:
         """
-        url = self.base_url + f'/sites/{hostname}:/{site_path}'
+        url = self.base_url + f'sites/{hostname}:/{site_path}'
         resp = self._parse_response(self.get_raw(url), 'sites')
         return resp
 
