@@ -167,8 +167,8 @@ class Client(HttpClientBase):
     def get_site_lists(self, site_id):
         endpoint = f'/sites/{site_id}/lists'
         lists = []
-        for l in self._get_paged_result_pages(endpoint, {}):
-            lists.extend(l['value'])
+        for ls in self._get_paged_result_pages(endpoint, {}):
+            lists.extend(ls['value'])
         return lists
 
     def get_site_list_by_name(self, site_id, list_name):
@@ -181,7 +181,7 @@ class Client(HttpClientBase):
         lists = self.get_site_lists(site_id)
         # ms removes -
         list_name = list_name.replace('-', '')
-        res_list = [l for l in lists if l['name'] == list_name]
+        res_list = [ls for ls in lists if ls['name'] == list_name]
 
         return res_list[0] if res_list else None
 
@@ -200,8 +200,8 @@ class Client(HttpClientBase):
         parameters = {'expand': expand_par}
 
         columns = []
-        for l in self._get_paged_result_pages(endpoint, parameters):
-            columns.extend(l['columns'])
+        for ls in self._get_paged_result_pages(endpoint, parameters):
+            columns.extend(ls['columns'])
 
         if not include_system:
             columns = [c for c in columns if
