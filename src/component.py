@@ -75,6 +75,7 @@ class Component(KBCEnvHandler):
 
             in_table = in_tables[0]
 
+            logging.info(f"groups:{self.client.get_groups()}")
             site = self.client.get_site_by_relative_url(params[KEY_BASE_HOST], params[KEY_SITE_REL_PATH])
             if not site.get('id'):
                 raise RuntimeError(
