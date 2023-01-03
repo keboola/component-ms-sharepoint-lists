@@ -153,14 +153,14 @@ class Client(HttpClientBase):
         r = self._parse_response(resp, f'batch: {r_type}')
         return self._get_failed_batch_resp(r)
 
-    def get_groups(self):
+    def get_sites(self):
         """
 
                 :param hostname: e.g. mytenant.sharepoint.com
                 :param site_path: e.g. /site/MyTeamSite
                 :return:
                 """
-        url = self.base_url + 'me/memberOf'
+        url = self.base_url + '/sites'
         return self.get_raw(url)
 
     def get_site_by_relative_url(self, hostname, site_path):
