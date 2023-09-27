@@ -56,7 +56,7 @@ class Component(KBCEnvHandler):
         if not token:
             raise Exception('Missing access token in authorization data!')
 
-        self._batch_size = params.get('batch_size', BATCH_LIMIT)
+        self._batch_size = self.cfg_params.get('batch_size', BATCH_LIMIT)
         self.client = Client(refresh_token=token, client_id=self.get_authorization()['appKey'],
                              client_secret=self.get_authorization()['#appSecret'], scope=OAUTH_APP_SCOPE)
 
