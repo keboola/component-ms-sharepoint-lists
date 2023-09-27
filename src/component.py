@@ -56,6 +56,7 @@ class Component(KBCEnvHandler):
         if not token:
             raise Exception('Missing access token in authorization data!')
 
+        self._batch_size = params.get('batch_size', BATCH_LIMIT)
         self.client = Client(refresh_token=token, client_id=self.get_authorization()['appKey'],
                              client_secret=self.get_authorization()['#appSecret'], scope=OAUTH_APP_SCOPE)
 
@@ -128,7 +129,7 @@ class Component(KBCEnvHandler):
 
     def _empty_list(self, site_id, sh_lst):
         for fl in self.client.get_site_list_fields(site_id, sh_lst['id'], expand='fields'):
-            f = self.client.delete_list_items(site_id, sh_lst['id'], [f['id'] for f in fl])
+            f = self.client.delete_list_items(site_id, sh_lst['id'], [f['id'] for f in fl], batch_limit=self.batch_size)
             if f:
                 raise RuntimeError(f"Some records couldn't be deleted: {f}.")
 
@@ -151,7 +152,7 @@ class Component(KBCEnvHandler):
                 br = self.client.build_create_list_item_batch_request(batch_index, site_id, list_id, line)
                 batch.append(br)
                 batch_index += 1
-                if batch_index >= BATCH_LIMIT:
+                if batch_index >= self.batch_size:
                     batch_index = 0
                     f = self.client.make_batch_request(batch, 'Create items')
                     f = self._retry_failed_write(site_id, list_id, batch, f)
@@ -237,6 +238,10 @@ class Component(KBCEnvHandler):
             col_def.append(cdef)
 
         return SharepointList(list_name, col_def)
+
+    @property
+    def batch_size(self) -> int:
+        return self._batch_size
 
 
 """
