@@ -1,1 +1,1 @@
-SharePoint empowers teamwork with dynamic and productive team sites. A list in SharePoint is a collection of data that gives you and your co-workers a flexible way to organize information.
+Writes tables to Microsoft SharePoint lists.
