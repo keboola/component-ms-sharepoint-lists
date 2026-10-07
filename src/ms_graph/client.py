@@ -22,7 +22,8 @@ class BatchRequest:
 
 
 class Client(HttpClientBase):
-    OAUTH_LOGIN_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+    DEFAULT_AUTHORITY_URL = 'https://login.microsoftonline.com/common'
+    OAUTH_TOKEN_ENDPOINT = '/oauth2/v2.0/token'
     MAX_RETRIES = 9
     BASE_URL = 'https://graph.microsoft.com/v1.0/'
     SYSTEM_LIST_COLUMNS = ["ComplianceAssetId",
@@ -41,7 +42,7 @@ class Client(HttpClientBase):
                            "AppAuthor",
                            "AppEditor"]
 
-    def __init__(self, refresh_token, client_secret, client_id, scope):
+    def __init__(self, refresh_token, client_secret, client_id, scope, authority_url=None):
         HttpClientBase.__init__(self, base_url=self.BASE_URL, max_retries=self.MAX_RETRIES, backoff_factor=0.3,
                                 status_forcelist=(429, 503, 500, 502, 504, 507))
         # refresh always on init
@@ -49,6 +50,7 @@ class Client(HttpClientBase):
         self.__clien_secret = client_secret
         self.__client_id = client_id
         self.__scope = scope
+        self.__oauth_login_url = (authority_url or self.DEFAULT_AUTHORITY_URL) + self.OAUTH_TOKEN_ENDPOINT
         access_token = self.refresh_token()
 
         # set auth header
@@ -74,7 +76,7 @@ class Client(HttpClientBase):
                 "refresh_token": self.__refresh_token,
                 "grant_type": "refresh_token",
                 "scope": self.__scope}
-        r = requests.post(url=self.OAUTH_LOGIN_URL, data=data)
+        r = requests.post(url=self.__oauth_login_url, data=data)
         parsed = self._parse_response(r, 'login')
         return parsed['access_token']
 

@@ -31,6 +31,7 @@ KEY_SRC_NAME = 'name'
 KEY_DEBUG = 'debug'
 MANDATORY_PARS = [KEY_BASE_HOST, KEY_LIST_NAME, KEY_SITE_REL_PATH]
 MANDATORY_IMAGE_PARS = []
+IMAGE_PAR_AUTHORITY_URL = 'oneDriveAuthorityUrl'
 
 
 class Component(KBCEnvHandler):
@@ -57,7 +58,8 @@ class Component(KBCEnvHandler):
             raise Exception('Missing access token in authorization data!')
 
         self.client = Client(refresh_token=token, client_id=self.get_authorization()['appKey'],
-                             client_secret=self.get_authorization()['#appSecret'], scope=OAUTH_APP_SCOPE)
+                             client_secret=self.get_authorization()['#appSecret'], scope=OAUTH_APP_SCOPE,
+                             authority_url=self.image_params.get(IMAGE_PAR_AUTHORITY_URL))
 
     def run(self):
         '''
