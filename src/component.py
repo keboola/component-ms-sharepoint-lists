@@ -27,6 +27,10 @@ KEY_CREATE_NEW = 'create_new'
 KEY_TITLE_COL = 'title_column'
 KEY_SRC_NAME = 'name'
 
+# Optional per stack override of the Microsoft identity platform authority,
+# set as data.image_parameters.oneDriveAuthorityUrl on the stack.
+KEY_IMAGE_AUTHORITY_URL = 'oneDriveAuthorityUrl'
+
 # #### Keep for debug
 KEY_DEBUG = 'debug'
 MANDATORY_PARS = [KEY_BASE_HOST, KEY_LIST_NAME, KEY_SITE_REL_PATH]
@@ -56,8 +60,11 @@ class Component(KBCEnvHandler):
         if not token:
             raise Exception('Missing access token in authorization data!')
 
+        authority_url = (self.image_params or {}).get(KEY_IMAGE_AUTHORITY_URL)
+
         self.client = Client(refresh_token=token, client_id=self.get_authorization()['appKey'],
-                             client_secret=self.get_authorization()['#appSecret'], scope=OAUTH_APP_SCOPE)
+                             client_secret=self.get_authorization()['#appSecret'], scope=OAUTH_APP_SCOPE,
+                             authority_url=authority_url)
 
     def run(self):
         '''
